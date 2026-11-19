@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2563eb">
+<title>刷題小幫手</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <h1 id="appTitle">刷題小幫手</h1>
+  <nav class="toolbar">
+    <button id="btnHome" class="ghost" title="回首頁">首頁</button>
+    <button id="btnList" class="ghost" title="題號清單">清單</button>
+    <button id="btnMenu" class="ghost" title="更多">⋯</button>
+  </nav>
+</header>
+
+<!-- 下拉選單 -->
+<div id="menu" class="menu hidden">
+  <button data-act="loadBank">📂 載入題庫 Excel</button>
+  <button data-act="loadImages">🖼️ 載入圖片</button>
+  <button data-act="export">💾 匯出／覆寫 Excel 進度</button>
+  <button data-act="resetStats">↺ 清除作答紀錄</button>
+  <button data-act="clearAll">🗑️ 清除所有本機資料</button>
+  <button data-act="end" class="danger">⏻ 結束</button>
+</div>
+
+<input type="file" id="fileBank" accept=".xlsx,.xls,.xlsm,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" hidden>
+<input type="file" id="fileImages" accept="image/*" multiple hidden>
+
+<main id="main">
+  <!-- 首頁 -->
+  <section id="viewHome" class="view">
+    <div class="card" id="bankStatus"></div>
+
+    <div class="card">
+      <h2>模式</h2>
+      <div class="seg" id="modeSeg">
+        <button data-mode="practice" class="on">練習</button>
+        <button data-mode="exam">模擬考試</button>
+        <button data-mode="search">尋找</button>
+      </div>
+      <p class="hint" id="modeHint"></p>
+
+      <div id="optPractice" class="opts">
+        <label>出題範圍
+          <select id="selPool">
+            <option value="all">全部題目</option>
+            <option value="unseen">未作答過</option>
+            <option value="wrong">曾答錯</option>
+            <option value="tag">指定熟悉度標籤</option>
+          </select>
+        </label>
+        <div id="poolTags" class="chips hidden"></div>
+      </div>
+
+      <div id="optExam" class="opts hidden">
+        <label>題數 <input type="number" id="examCount" min="1" value="50" inputmode="numeric"></label>
+      </div>
+
+      <div id="optSearch" class="opts hidden">
+        <label>題號 <input type="number" id="searchNo" min="1" inputmode="numeric" placeholder="輸入題號"></label>
+      </div>
+
+      <div class="row">
+        <button id="btnStart" class="primary big">開始</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 作答 -->
+  <section id="viewQuiz" class="view hidden">
+    <div class="quizhead">
+      <span id="qProgress"></span>
+      <span id="qNo" class="badge"></span>
+    </div>
+
+    <div id="parentBlock" class="parent hidden"></div>
+
+    <div class="card qcard">
+      <div id="qText" class="qtext"></div>
+      <div id="qImage" class="imgslot"></div>
+      <div id="qOptions" class="options" role="radiogroup"></div>
+    </div>
+
+    <div id="resultBox" class="card result hidden">
+      <div id="resultLine"></div>
+      <div id="explainBox" class="imgslot"></div>
+    </div>
+
+    <div class="card fam">
+      <span>熟悉度：</span>
+      <div id="famChips" class="chips"></div>
+    </div>
+
+    <div class="row actions">
+      <button id="btnPrev" class="ghost">上一題</button>
+      <button id="btnConfirm" class="primary">確定</button>
+      <button id="btnNext" class="ghost">下一題</button>
+    </div>
+    <div class="row actions">
+      <button id="btnSubmitExam" class="warn hidden">交卷</button>
+      <button id="btnBackHome" class="ghost">回首頁</button>
+    </div>
+  </section>
+
+  <!-- 考試結果 -->
+  <section id="viewExamResult" class="view hidden">
+    <div class="card">
+      <h2>考試結果</h2>
+      <div id="examScore" class="score"></div>
+      <p class="hint">點題號可檢視解答與解析</p>
+      <div id="examGrid" class="grid"></div>
+    </div>
+    <div class="row"><button id="btnExamHome" class="primary">回首頁</button></div>
+  </section>
+
+  <!-- 題號清單 -->
+  <section id="viewList" class="view hidden">
+    <div class="card">
+      <h2>題號清單</h2>
+      <p class="hint"><span class="dot unseen"></span>未作答 <span class="dot ok"></span>上次答對 <span class="dot ng"></span>上次答錯</p>
+      <div id="listGrid" class="grid"></div>
+    </div>
+  </section>
+
+  <!-- 結束 -->
+  <section id="viewEnd" class="view hidden">
+    <div class="card center">
+      <h2>已結束</h2>
+      <p>作答紀錄已自動儲存在本機。</p>
+      <p class="hint">若頁面沒有自動關閉，請直接關閉分頁或滑掉 App。</p>
+      <button id="btnReopen" class="ghost">返回</button>
+    </div>
+  </section>
+</main>
+
+<!-- 錯誤 / 對話框 -->
+<div id="dialog" class="overlay hidden" role="dialog" aria-modal="true">
+  <div class="dlg">
+    <h2 id="dlgTitle"></h2>
+    <div id="dlgBody"></div>
+    <div class="row" id="dlgBtns"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="lib/xlsx.full.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

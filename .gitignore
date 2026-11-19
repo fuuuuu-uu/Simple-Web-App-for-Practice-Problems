@@ -1,0 +1,7 @@
+# 題庫與圖片有著作權，不要上傳
+*.xlsx
+*.xls
+*.csv
+images/
+_test/
+.claude/
